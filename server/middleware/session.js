@@ -1,0 +1,16 @@
+import { v4 as uuidv4 } from 'uuid';
+
+const sessionMiddleware = (req, res, next) => {
+  let { sessionId } = req.cookies;
+  if (!sessionId) {
+    sessionId = uuidv4();
+  }
+  res.cookie("sessionId", sessionId, {
+    maxAge: 1000 * 60 * 60 * 24 * 30,
+    httpOnly: true,
+  });
+  req.sessionId = sessionId;
+  next();
+}
+
+export default sessionMiddleware;
