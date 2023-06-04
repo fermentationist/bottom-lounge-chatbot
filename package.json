@@ -18,7 +18,7 @@
     "test-responses": "NODE_OPTIONS=--experimental-vm-modules && export NODE_OPTIONS && jest \"venueQuestions.test.js\" --runInBand --detectOpenHandles --forceExit",
     "test-chatbot": "NODE_OPTIONS=--experimental-vm-modules && export NODE_OPTIONS && jest \"ChatBot.test.js\" --runInBand --detectOpenHandles --forceExit --coverage",
     "test-all": "npm run test-faq && npm run test-chatbot && npm run test-scraper && npm run test-routes && npm run test-responses",
-    "server": "NODE_ENV=production && export NODE_ENV && node server/index.js",
+    "server": "node server/index.js",
     "start": "NODE_ENV=production && export NODE_ENV && npm run build && npm run server"
   },
   "author": "",
