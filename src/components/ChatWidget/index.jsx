@@ -23,13 +23,12 @@ const ChatWidget = () => {
         "Content-Type": "application/json",
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Credentials": "true",
-        "Cookie": document.cookie,
+        cookie: document.cookie,
       },
       credentials: "include",
       body: JSON.stringify({ message }),
     });
     const data = await response.json();
-    console.log(data);
     addResponseMessage(data.message);
   };
   return (

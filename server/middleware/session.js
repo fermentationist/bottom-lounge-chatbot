@@ -1,8 +1,12 @@
 import { v4 as uuidv4 } from 'uuid';
 
 const sessionMiddleware = (req, res, next) => {
-  let { sessionId } = req.cookies;
-  console.log("sessionId in cookie:", sessionId);
+  let { sessionIdFromCookie } = req.cookies;
+  console.log("sessionIdFromCookie:", sessionIdFromCookie);
+  const [_, sessionIdFromHeader] = req.headers.cookie?.split("sessionId=") ?? [];
+  console.log("sessionIdFromHeader:", sessionIdFromHeader);
+  let sessionId = sessionIdFromCookie ?? sessionIdFromHeader;
+
   if (!sessionId) {
     sessionId = uuidv4();
   }
@@ -10,7 +14,7 @@ const sessionMiddleware = (req, res, next) => {
     maxAge: 1000 * 60 * 60 * 24 * 30,
     httpOnly: true,
   });
-  res.header("Access-Control-Allow-Credentials", "true");
+  res.header("Access-Control-Allow-Credentials", true);
   req.sessionId = sessionId;
   next();
 }
