@@ -13,6 +13,7 @@ const sessionMiddleware = (req, res, next) => {
   res.cookie("sessionId", sessionId, {
     maxAge: 1000 * 60 * 60 * 24 * 30,
     httpOnly: true,
+    sameSite: "secure"
   });
   res.header("Access-Control-Allow-Credentials", true);
   req.sessionId = sessionId;
