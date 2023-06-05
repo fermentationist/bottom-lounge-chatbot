@@ -26,6 +26,7 @@ export default defineConfig(({ command, mode }) => {
           entryFileNames: "assets/chatbot.js",
           chunkFileNames: "assets/chatbot.js",
           assetFileNames: "assets/chatbot.css",
+          sourcemap: true,
         },
       },
     },
