@@ -34,14 +34,13 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser(COOKIE_SECRET));
 
 // apply middleware
-app.use(rateLimiter);
 app.use(sessionMiddleware);
 
 // serve static files from client directory
 app.use(express.static(STATIC_FOLDER));
 
-// apply routes
-app.use("/api", apiRouter);
+// apply rate limiter to all api routes
+app.use("/api", rateLimiter, apiRouter);
 
 // default route
 app.get("/", (req, res) => {
