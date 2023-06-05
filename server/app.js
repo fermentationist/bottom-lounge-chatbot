@@ -21,7 +21,9 @@ const app = express();
 
 // enable cors
 app.use(cors(corsOptions));
-app.options("*", cors(corsOptions));
+app.options("*", cors(corsOptions), (req, res) => {
+  res.header("Access-Control-Allow-Credentials", "true");
+});
 
 // parse incoming requests
 app.use(express.json());
