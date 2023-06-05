@@ -1,3 +1,4 @@
+/* global process */
 import PageScraper from "./PageScraper.js";
 
 const URL_TO_SCRAPE = process.env.URL_TO_SCRAPE;
@@ -16,3 +17,6 @@ export default async function getFaq() {
   faq.expires = Date.now() + FAQ_UPDATE_INTERVAL;
   return data;
 }
+
+// run once on startup
+getFaq();
