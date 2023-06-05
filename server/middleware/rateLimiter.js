@@ -1,7 +1,7 @@
 import rateLimit from "express-rate-limit";
 
-const MAX_REQUESTS = 26;
-const REQUEST_LIMIT_WINDOW = 1000 * 60 * 60; // 1 hour
+const MAX_REQUESTS = 25;
+const REQUEST_LIMIT_WINDOW = 1000 * 60 * 30; // 1/2 hour
 
 const rate = MAX_REQUESTS / (REQUEST_LIMIT_WINDOW / (1000 * 60 * 60)); // rate per hour
 const rateLimitConfig = {

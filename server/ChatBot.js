@@ -4,6 +4,7 @@ import { Configuration, OpenAIApi } from "openai";
 import opError from "./error.js";
 import getFaq from "./services/getFAQ.js";
 
+const BOT_TEMPERATURE = process.env.BOT_TEMPERATURE;
 const BOT_INSTRUCTIONS = process.env.BOT_INSTRUCTIONS;
 const BOT_NAME = process.env.BOT_NAME;
 // 85% of the max token limit, to leave room for the bot's response
@@ -50,7 +51,7 @@ export class ChatBotRequest {
   cancel() {
     this.cancelled = true;
   }
-  async getCompletion(messages) {
+  async getCompletion(messages, temperature) {
     try {
       console.log("Getting completion from OpenAI API...");
       const estimatedPromptTokens = ChatBotRequest.tokenEstimate(messages);
@@ -61,7 +62,7 @@ export class ChatBotRequest {
         model: this.model,
         messages,
         max_tokens: difference,
-        temperature: this.temperature,
+        temperature,
       });
       this.promise = promise;
       const response = await promise;
@@ -113,7 +114,7 @@ class ChatBot {
     "violence/graphic",
   ];
   name = BOT_NAME ?? "Marvin";
-  temperature = 0.95;
+  temperature = BOT_TEMPERATURE ?? 0.95;
   model = "gpt-3.5-turbo-0301";
   cancelled = false;
   pendingRequestMessage = `Please wait while I finish responding to your previous message. If you don't want to wait, type "/cancel" to cancel your previous message.`;
@@ -189,7 +190,7 @@ class ChatBot {
         openai: this.openai,
       });
       this.addToPendingRequests(sessionId, request);
-      const completion = await request.getCompletion(messages);
+      const completion = await request.getCompletion(messages, this.temperature);
       if (request.cancelled) {
         return null;
       }
