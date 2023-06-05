@@ -5,11 +5,8 @@
   bottom: 0;
   right: 0;
   z-index: 9999;
-  height: 100vh;
+  max-height: 100%;
   width: 100vw;
   font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
-  /* font-size: 16px;
-  line-height: 24px;
-  font-weight: 250; */
   color: #121212;
 }
