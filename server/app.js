@@ -27,10 +27,10 @@ app.use((req, res, next) => {
   next();
 });
 
-app.options("*", (req, res, next) => {
-  res.header("Access-Control-Allow-Credentials", true);
-  next();
-}, cors(corsOptions));
+// app.options("*", (req, res, next) => {
+//   res.header("Access-Control-Allow-Credentials", true);
+//   next();
+// }, cors(corsOptions));
 
 
 // parse incoming requests
