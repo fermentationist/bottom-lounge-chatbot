@@ -24,9 +24,6 @@ const ChatWidget = () => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": BOT_HOST,
-        "Access-Control-Allow-Headers": "true",
-        "Access-Control-Allow-Credentials": "true",
         cookie: document.cookie,
       },
       credentials: "include",
