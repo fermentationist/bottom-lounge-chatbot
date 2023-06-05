@@ -4,16 +4,17 @@
   max-width: 224px;
 }
 
-
 .rcw-close-launcher {
   padding-block-start: 8px;
 }
 
 @media screen and (max-width: 800px) {
+  .rcw-conversation-container {
+    max-height: clamp(55vh, 100vh - 60px, 100vh);
+  }
   .rcw-conversation-container .rcw-close-button {
     padding: 0;
     top: 60px;
-    max-height: 100%;
   }
   .rcw-widget-container {
     align-items: flex-start;
