@@ -23,11 +23,14 @@ const app = express();
 app.use(cors(corsOptions));
 
 app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Credentials", "true")
+  res.header("Access-Control-Allow-Credentials", true);
   next();
 });
 
-app.options("*", cors(corsOptions));
+app.options("*", (req, res, next) => {
+  res.header("Access-Control-Allow-Credentials", true);
+  next();
+}, cors(corsOptions));
 
 
 // parse incoming requests
