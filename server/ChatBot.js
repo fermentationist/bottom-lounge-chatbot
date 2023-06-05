@@ -7,7 +7,8 @@ import getFaq from "./services/getFAQ.js";
 const BOT_INSTRUCTIONS = process.env.BOT_INSTRUCTIONS;
 const BOT_NAME = process.env.BOT_NAME;
 // 85% of the max token limit, to leave room for the bot's response
-const TOKEN_LIMIT = Math.floor(Math.round(4096 * 0.85));
+const MAX_TOKENS = 4096;
+const TOKEN_LIMIT = Math.round(MAX_TOKENS * 0.95);
 // used as key in ChatBot.messages[hostname], to store messages for the public chatbot (the one that responds to everyone in the room)
 
 
@@ -18,7 +19,7 @@ const getBotInstructions = async (botName) => {
   return instructions;
 }
 
-class ChatBotRequest {
+export class ChatBotRequest {
   cancelled = false;
   pending = true;
   response = null;
@@ -27,9 +28,10 @@ class ChatBotRequest {
     this.messages = messages;
     this.openai = openai;
     this.model = model ?? "gpt-3.5-turbo-0301";
-    this.TOKEN_LIMIT = tokenLimit ?? TOKEN_LIMIT;
+    this.promptLimit = Math.round((tokenLimit ?? TOKEN_LIMIT) * 0.75);
     // trim the messages array to the token limit
-    while (ChatBotRequest.tokenEstimate(this.messages) > this.TOKEN_LIMIT) {
+    while (ChatBotRequest.tokenEstimate(this.messages) > this.promptLimit
+    ) {
       // Remove the second and third messages from the array, which are the oldest user message and the oldest bot response
       if (this.messages.length < 3) {
         throw opError("invalid_message", "message too long");
@@ -52,8 +54,8 @@ class ChatBotRequest {
     try {
       console.log("Getting completion from OpenAI API...");
       const estimatedPromptTokens = ChatBotRequest.tokenEstimate(messages);
-      let difference = this.TOKEN_LIMIT - estimatedPromptTokens;
-      difference = difference < 0 ? this.TOKEN_LIMIT + difference : difference;
+      console.log("Estimated prompt tokens:", estimatedPromptTokens);
+      let difference = TOKEN_LIMIT - estimatedPromptTokens;
       performance.mark("start");
       const promise = this.openai.createChatCompletion({
         model: this.model,

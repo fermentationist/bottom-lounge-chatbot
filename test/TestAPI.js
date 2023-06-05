@@ -1,7 +1,7 @@
+/* global process */
 // start the server
-import server from "../server/index.js"; // eslint-disable-line import/no-unresolved
-
-const PORT = process.env.PORT || 4000;
+import server from "../server/index.js"; // eslint-disable-line
+const PORT = process.env.SERVER_PORT || 4000;
 const defaultBaseUrl = `http://localhost:${PORT}`;
 
 export default class TestAPI {
@@ -22,22 +22,6 @@ export default class TestAPI {
     try {
       let url = passedUrl || this.url;
       url = url.startsWith("http") ? url : `${this.baseUrl}${url}`;
-
-      // console.log("REQUEST:\nURL: ", url);
-      // console.log("METHOD: ", method || this.method);
-      // console.log("DATA: ", data || this.data);
-      // console.log("HEADERS: ", headers || this.headers || {
-      //   "Content-Type": "application/json",
-      //   });
-      // console.log("config:", {
-      //   url,
-      //   method: method || this.method,
-      //   body: (data || this.data) && JSON.stringify(data || this.data),
-      //   headers: headers ||
-      //     this.headers || {
-      //       "Content-Type": "application/json",
-      //     },
-      // })
       return fetch(url, {
         method: method || this.method,
         body: (data || this.data) && JSON.stringify(data || this.data),
@@ -45,22 +29,7 @@ export default class TestAPI {
             "Content-Type": "application/json",
             ...(headers || this.headers)
           }
-      })
-      // .then(async (res) => {
-      //   if (res.ok) {
-      //     try {
-      //       const json = await res.json();
-      //       // console.log("RESPONSE:\nSTATUS: ", res.status);
-      //       // console.log("JSON: ", json);
-      //       return json;
-      //     } catch (err) {
-      //       return res;
-      //     }
-      //   } else {
-      //     console.log("ERROR: ", res.statusText);
-      //     throw new Error(res.statusText);
-      //   }
-      // });
+      });
     } catch (err) {
       console.error(err);
       return Promise.reject(err);

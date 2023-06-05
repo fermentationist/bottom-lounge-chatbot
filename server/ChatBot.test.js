@@ -1,5 +1,7 @@
+/* global describe, it, expect */
 import { jest } from "@jest/globals";
-import ChatBot from "./ChatBot.js";
+import ChatBot, { ChatBotRequest } from "./ChatBot.js";
+import venueQuestions from "../test/venueQuestions.js";
 
 describe("ChatBot", () => {
   let requestToCancel, conversationsBefore;
@@ -121,6 +123,26 @@ describe("ChatBot", () => {
       createChatCompletion.mockRestore();
     });
 
+    it("should save the conversation to the conversations object", async () => {
+      const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+      const createChatCompletion = jest
+        .spyOn(chatbot.openai, "createChatCompletion")
+        .mockImplementation(createChatCompletionMockWithDelay(0));
+      let count = chatbot.conversations[sessionId]?.length || 0;
+      for (const question of venueQuestions) {
+        await sleep(10);
+        await chatbot.converse(question, sessionId);
+        count += 2;
+        const [lastMessage, lastCompletion] = (chatbot.conversations[sessionId] || []).slice(-2);
+        expect(lastMessage.role).toEqual("user");
+        expect(lastMessage.content).toEqual(question);
+        expect(lastCompletion.role).toEqual("assistant");
+        expect(lastCompletion.content).toEqual(completionContent);
+      }
+      expect(chatbot.conversations[sessionId]?.length).toEqual(count);
+      createChatCompletion.mockRestore();
+    });
+    
     it("should return a warning and reject message if sending a second message while a previous response is still pending", (done) => {
       const createChatCompletion = jest
         .spyOn(chatbot.openai, "createChatCompletion")
@@ -130,7 +152,7 @@ describe("ChatBot", () => {
         .converse(message, sessionId)
         .then(() => {
           conversationsBefore = { ...chatbot.conversations }?.[sessionId];
-
+  
           // third request - should be "rejected" with pendingRequestMessage
           return chatbot.converse(message, sessionId);
         })
@@ -143,6 +165,9 @@ describe("ChatBot", () => {
       requestToCancel = chatbot.converse(message, sessionId);
     });
   });
+
+
+  
 
   describe("cancelPending", () => {
     it("should cancel pending requests", (done) => {
