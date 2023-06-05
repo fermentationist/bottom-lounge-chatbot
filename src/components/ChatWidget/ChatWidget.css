@@ -17,7 +17,7 @@
     top: 60px;
   }
   .rcw-widget-container {
-    max-height: clamp(55vh, 75vh - 60px, 100vh);
+    max-height: clamp(45vh, 65vh - 60px, 100vh);
     align-items: flex-start;
     justify-content: flex-end;
   }
