@@ -4,7 +4,7 @@ import { Configuration, OpenAIApi } from "openai";
 import opError from "./error.js";
 import getFaq from "./services/getFAQ.js";
 
-const BOT_TEMPERATURE = process.env.BOT_TEMPERATURE;
+const BOT_TEMPERATURE = process.env.BOT_TEMPERATURE && parseFloat(process.env.BOT_TEMPERATURE);
 const BOT_INSTRUCTIONS = process.env.BOT_INSTRUCTIONS;
 const BOT_NAME = process.env.BOT_NAME;
 // 85% of the max token limit, to leave room for the bot's response
