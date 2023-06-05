@@ -1,3 +1,4 @@
+/* global process */
 import { v4 as uuidv4 } from 'uuid';
 
 const sessionMiddleware = (req, res, next) => {
@@ -15,6 +16,7 @@ const sessionMiddleware = (req, res, next) => {
     httpOnly: true,
     sameSite: "none",
     secure: true,
+    domain: process.env.VITE_BOT_HOST_URL,
   });
   res.header("Access-Control-Allow-Credentials", true);
   res.header("Access-Control-Allow-Origin", req.headers.origin ?? "*");
