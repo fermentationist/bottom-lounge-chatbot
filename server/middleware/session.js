@@ -11,12 +11,16 @@ const sessionMiddleware = (req, res, next) => {
     sessionId = uuidv4();
   }
   res.cookie("sessionId", sessionId, {
-    maxAge: 1000 * 60 * 60 * 24 * 30,
+    maxAge: 1000 * 60 * 60 * 24 * 1,
     httpOnly: true,
     sameSite: "none",
     secure: true,
   });
   res.header("Access-Control-Allow-Credentials", true);
+  res.header("Access-Control-Allow-Origin", req.headers.origin ?? "*");
+  res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS");
+  res.header("Access-Control-Allow-Headers", "*, Authorization");
+  res.header("Access-Control-Expose-Headers", "Authorization");
   req.sessionId = sessionId;
   next();
 }

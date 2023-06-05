@@ -7,6 +7,10 @@ const corsOptions = {
     callback(null, !origin || ALLOWED_ORIGINS.includes(origin));
   },
   credentials: true,
+  maxAge: 86400,
+  methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE"],
+  // allowedHeaders: [ "*", "Authorization" ],
+  exposedHeaders: ["Authorization"],
 };
 
 export default corsOptions;
