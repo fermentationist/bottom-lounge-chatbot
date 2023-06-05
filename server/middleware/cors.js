@@ -10,6 +10,7 @@ const getCorsOptions = (req) => {
   const origin = req.headers.origin;
   return {
     origin: ALLOWED_ORIGINS.includes(origin) ? origin : origin ? "" : "all",
+    credentials: true,
   };
 };
 
