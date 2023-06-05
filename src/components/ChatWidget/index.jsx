@@ -31,7 +31,7 @@ const ChatWidget = () => {
       body: JSON.stringify({ message }),
     });
     const data = await response.json();
-    addResponseMessage(data.message);
+    data.message && addResponseMessage(data.message);
   };
   return (
     <Widget
