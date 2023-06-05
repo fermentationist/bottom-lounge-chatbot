@@ -11,8 +11,15 @@
 
 @media screen and (max-width: 800px) {
   .rcw-conversation-container .rcw-close-button {
-    opacity: 0.75;
     padding: 0;
     top: 60px;
+    max-height: 100%;
+  }
+  .rcw-widget-container {
+    align-items: flex-start;
+    justify-content: flex-end;
   }
 }
+
+@media screen and (max-width: 800px)
+
