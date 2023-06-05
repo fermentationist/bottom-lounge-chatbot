@@ -2,6 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 const sessionMiddleware = (req, res, next) => {
   let { sessionId } = req.cookies;
+  console.log("sessionId in cookie:", sessionId);
   if (!sessionId) {
     sessionId = uuidv4();
   }
