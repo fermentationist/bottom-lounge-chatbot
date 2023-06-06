@@ -17,9 +17,10 @@
 .rcw-title {
   font-family: Cocogoose, Inter, Avenir, Helvetica, Arial, sans-serif;
   padding: 1rem !important;
+  line-height: 1.4rem;
 }
 
-.rcw-launcher, .rcw-header {
+.rcw-launcher, .rcw-header, .rcw-close-button {
   background-color: #2AABE2 !important;
 }
 
