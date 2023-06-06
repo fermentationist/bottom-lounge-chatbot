@@ -8,6 +8,12 @@
   padding-block-start: 8px;
 }
 
+.rcw-picker-btn {
+  /* hide broken emoji picker button */
+  opacity: 0;
+  z-index: -99;
+}
+
 @media screen and (max-width: 800px) {
   .rcw-conversation-container {
     max-height: clamp(55vh, 100%, 100vh);
