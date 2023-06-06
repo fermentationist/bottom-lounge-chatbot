@@ -6,6 +6,7 @@ import getFaq from "./services/getFAQ.js";
 
 const BOT_TEMPERATURE = process.env.BOT_TEMPERATURE && parseFloat(process.env.BOT_TEMPERATURE);
 const BOT_INSTRUCTIONS = process.env.BOT_INSTRUCTIONS;
+const BOT_INSTRUCTIONS_EXTRA = process.env.BOT_INSTRUCTIONS_EXTRA ?? "";
 const BOT_NAME = process.env.BOT_NAME;
 // 85% of the max token limit, to leave room for the bot's response
 const MAX_TOKENS = 4096;
@@ -17,7 +18,7 @@ const getBotInstructions = async (botName) => {
   const beginningInstructions = `The assistant's name is ${botName}. \n` + BOT_INSTRUCTIONS ?? `The assistant is an AI chatbot. It is helpful, friendly, and informative.`;
   const faq = await getFaq();
   const instructions = `${beginningInstructions} \nThe following text is from the FAQ section of the website, which the assistant references to find answers to user questions: \n${faq}`;
-  return instructions;
+  return instructions + "\n" + BOT_INSTRUCTIONS_EXTRA;
 }
 
 export class ChatBotRequest {
