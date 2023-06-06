@@ -1,3 +1,15 @@
+@font-face {
+  font-family: Product Sans;
+  src: url("/fonts/Product%20Sans%20Regular.ttf");
+}
+
+@font-face {
+  font-family: Cocogoose;
+  src: url("/fonts/Cocogoose%20Ultralight.ttf");
+}
+
+
+
 #chat-widget {
   box-sizing: border-box;
   background-color: transparent;
@@ -7,6 +19,9 @@
   z-index: 9999;
   max-height: 100%;
   width: 100vw;
-  font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
-  color: #121212;
+  font-family: Product Sans, Inter, Avenir, Helvetica, Arial, sans-serif;
+  font-weight: 250;
+  letter-spacing: 0.025rem;
+  line-height: 1.25em;
+  color: #161616;
 }

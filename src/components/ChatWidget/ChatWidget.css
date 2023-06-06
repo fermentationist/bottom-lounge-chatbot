@@ -14,6 +14,15 @@
   z-index: -99;
 }
 
+.rcw-title {
+  font-family: Cocogoose, Inter, Avenir, Helvetica, Arial, sans-serif;
+  padding: 1rem !important;
+}
+
+.rcw-launcher, .rcw-header {
+  background-color: #2AABE2 !important;
+}
+
 @media screen and (max-width: 800px) {
   .rcw-conversation-container {
     max-height: clamp(55vh, 100%, 100vh);
