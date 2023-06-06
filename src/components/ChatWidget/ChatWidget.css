@@ -16,7 +16,7 @@
 
 .rcw-title {
   font-family: Cocogoose, Inter, Avenir, Helvetica, Arial, sans-serif;
-  padding: 0 !important;
+  padding: 1rem !important;
   line-height: 1.85rem;
 }
 
@@ -46,5 +46,8 @@
     max-height: clamp(45vh, 65vh - 60px, 100vh);
     align-items: flex-start;
     justify-content: flex-end;
+  }
+  .rcw-title {
+    padding: 0 !important;
   }
 }
