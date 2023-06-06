@@ -35,7 +35,8 @@
     "react-chat-widget-react-18": "^1.0.0",
     "react-dom": "^18.2.0",
     "string-strip-html": "^13.4.1",
-    "uuid": "^9.0.0"
+    "uuid": "^9.0.0",
+    "woke-dyno": "^1.0.0"
   },
   "devDependencies": {
     "@types/react": "^18.0.37",

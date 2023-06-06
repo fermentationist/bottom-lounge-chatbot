@@ -14,17 +14,3 @@ export default class PageScraper {
   }
 
 }
-
-export const scraper = async (url) => {
-  const browser = await puppeteer.launch({headless: "new"});
-  const page = await browser.newPage();
-  await page.goto(url);
-  const bodyHandle = await page.$("body");
-  const data = await bodyHandle.evaluate(body => body.innerHTML);
-  await browser.close();
-  const {result} = stripHtml(data);
-  return result;
-}
-
-
-// export default scraper;
