@@ -7,7 +7,6 @@ const BOT_HOST = import.meta.env.VITE_BOT_HOST_URL;
 const URL = `${BOT_HOST}/api/bot/`;
 const GREETING = import.meta.env.VITE_BOT_GREETING || "Hello!";
 const TITLE = import.meta.env.VITE_CHAT_WIDGET_TITLE ?? "Welcome!";
-const SUBTITLE = import.meta.env.VITE_CHAT_WIDGET_SUBTITLE ?? "How can I help you?";
 
 const ChatWidget = () => {
   let useEffectHasRun = false;
@@ -36,7 +35,6 @@ const ChatWidget = () => {
     <Widget
       handleNewUserMessage={handleNewUserMessage}
       title={TITLE}
-      subtitle={SUBTITLE}
     />
   );
 };

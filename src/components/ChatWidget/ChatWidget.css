@@ -16,12 +16,22 @@
 
 .rcw-title {
   font-family: Cocogoose, Inter, Avenir, Helvetica, Arial, sans-serif;
-  padding: 1rem !important;
-  line-height: 1.4rem;
+  padding: 0 !important;
+  line-height: 1.85rem;
 }
 
 .rcw-launcher, .rcw-header, .rcw-close-button {
-  background-color: #2AABE2 !important;
+  background-color: #2AABE2 !important; 
+  padding: 0;
+}
+
+.rcw-header {
+  padding: 1rem 0 !important;
+}
+
+.rcw-header > span {
+  /* hide subtitle */
+  display: none;
 }
 
 @media screen and (max-width: 800px) {
