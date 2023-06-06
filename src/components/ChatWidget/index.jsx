@@ -25,7 +25,6 @@ const ChatWidget = () => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        cookie: document.cookie,
       },
       credentials: "include",
       body: JSON.stringify({ message }),

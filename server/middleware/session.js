@@ -1,23 +1,19 @@
-/* global process */
 import { v4 as uuidv4 } from 'uuid';
 
 const sessionMiddleware = (req, res, next) => {
-  let { sessionIdFromCookie } = req.cookies;
-  console.log("sessionIdFromCookie:", sessionIdFromCookie);
-  const [_, sessionIdFromHeader] = req.headers.cookie?.split("sessionId=") ?? [];
-  console.log("sessionIdFromHeader:", sessionIdFromHeader);
-  let sessionId = sessionIdFromCookie ?? sessionIdFromHeader;
-
+  // get sessionId from cookie or create new one
+  let { sessionId } = req.cookies;
   if (!sessionId) {
     sessionId = uuidv4();
   }
+  // set cookie
   res.cookie("sessionId", sessionId, {
     maxAge: 1000 * 60 * 60 * 24 * 1,
     httpOnly: true,
     sameSite: "none",
     secure: true,
-    // domain: process.env.VITE_BOT_HOST_URL,
   });
+  // set headers
   res.header("Access-Control-Allow-Credentials", true);
   res.header("Access-Control-Allow-Origin", req.headers.origin ?? "*");
   res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS");

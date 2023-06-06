@@ -22,6 +22,7 @@ export default async function getFaq() {
   } catch (err) {
     console.error(err);
     // scraping failed, return stale data or empty string
+    console.log("scraping failed, returning stale faq data")
     return faq.data ?? "";
   }
 }
