@@ -40,7 +40,7 @@
   }
   .rcw-conversation-container .rcw-close-button {
     padding: 0;
-    top: 60px;
+    top: 48px;
   }
   .rcw-widget-container {
     max-height: clamp(45vh, 65vh - 60px, 100vh);
