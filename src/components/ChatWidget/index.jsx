@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Widget, addResponseMessage } from "react-chat-widget-react-18";
 import "react-chat-widget-react-18/lib/styles.css";
 import "./ChatWidget.css";
+import error from "../../../server/error";
 
 const BOT_HOST = import.meta.env.VITE_BOT_HOST_URL;
 const URL = `${BOT_HOST}/api/bot/`;
@@ -27,9 +28,13 @@ const ChatWidget = () => {
       },
       credentials: "include",
       body: JSON.stringify({ message }),
+    }).catch(error => {
+      console.error(error);
+      error.message && addResponseMessage(error.message);
     });
-    const data = await response.json();
-    data.message && addResponseMessage(data.message);
+    const json = response && await response.json();
+    const reply = json?.message ?? json?.error ?? "";
+    reply && addResponseMessage(reply);
   };
   return (
     <Widget
