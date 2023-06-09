@@ -1,6 +1,7 @@
 .rcw-input {
   overflow-y: hidden;
   word-wrap: break-word;
+  max-width: 350px;
 }
 
 .rcw-close-launcher {
