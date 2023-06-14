@@ -1,3 +1,4 @@
+/* global process, describe, it , expect */
 import "dotenv/config";
 import PageScraper from "./PageScraper.js";
 

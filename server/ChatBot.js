@@ -170,7 +170,6 @@ class ChatBot {
   }
 
   async converse(userInput, sessionId) {
-    console.log("sessionId:", sessionId);
     if (this.userHasPendingUncancelledRequest(sessionId)) {
       return this.pendingRequestMessage;
     }

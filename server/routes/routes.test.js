@@ -1,4 +1,4 @@
-import { jest } from "@jest/globals";
+/* global describe, it, afterAll, expect */
 import TestAPI from "../../test/TestAPI.js";
 import { chatbot } from "../services/chatbot.js";
 import { getCookie } from "../../test/utils.js";
@@ -23,12 +23,12 @@ describe("routes", () => {
     });
   });
 
-  describe("POST /bot", () => {
+  describe("POST /api/bot", () => {
     const firstMessage = "hello, this is my first message";
     const slowQuery = "Please explain all of the rules of Chess.";
     it("should return a 200 response", async () => {
       const res = await api.request({
-        url: "/bot",
+        url: "/api/bot",
         method: "POST",
         data: {
           message: firstMessage,
@@ -46,7 +46,7 @@ describe("routes", () => {
       // to test if bot is aware of previous message
       const secondMessage = "What was the last thing I said?";
       const res = await api.request({
-        url: "/bot",
+        url: "/api/bot",
         method: "POST",
         data: {
           message: secondMessage,
@@ -64,7 +64,7 @@ describe("routes", () => {
 
     it("should return a 400 response if no message is provided", async () => {
       const res = await api.request({
-        url: "/bot",
+        url: "/api/bot",
         method: "POST",
         headers: {
           cookie: sessionCookie,
@@ -75,7 +75,7 @@ describe("routes", () => {
 
     it("should return a 400 response if message is empty", async () => {
       const res = await api.request({
-        url: "/bot",
+        url: "/api/bot",
         method: "POST",
         data: {
           message: "",
@@ -89,7 +89,7 @@ describe("routes", () => {
 
     it("should return a 400 response if message is not a string", async () => {
       const res = await api.request({
-        url: "/bot",
+        url: "/api/bot",
         method: "POST",
         data: {
           message: 123,
@@ -104,7 +104,7 @@ describe("routes", () => {
     // this test is coupled with the next test by the message
     it("should start a new session if no cookie is provided", async () => {
       const res = await api.request({
-        url: "/bot",
+        url: "/api/bot",
         method: "POST",
         data: {
           // the next test will check if the bot is aware of the previous (this) message
@@ -123,7 +123,7 @@ describe("routes", () => {
       // to test if bot is aware of previous message
       const message = "What was the last thing I said?";
       const res = await api.request({
-        url: "/bot",
+        url: "/api/bot",
         method: "POST",
         data: {
           message,
@@ -145,7 +145,7 @@ describe("routes", () => {
     it("should return a warning and reject message if sending a second message while a previous response is still pending", (done) => {
       const firstRequest = api
         .request({
-          url: "/bot",
+          url: "/api/bot",
           method: "POST",
           data: {
             message: "hello",
@@ -157,7 +157,7 @@ describe("routes", () => {
         .then(() => {
           return api
             .request({
-              url: "/bot",
+              url: "/api/bot",
               method: "POST",
               data: {
                 message: "hello",
@@ -175,7 +175,7 @@ describe("routes", () => {
         });
       // will be cancelled in the next test
       const requestToCancel = api.request({
-        url: "/bot",
+        url: "/api/bot",
         method: "POST",
         data: {
           message: "How are you today?",
@@ -190,7 +190,7 @@ describe("routes", () => {
       const [_, sessionId] = newSessionCookie.split("=");
       const [cancelledRequest] = chatbot.pendingRequests[sessionId];
       const cancelRes = await api.request({
-        url: "/bot",
+        url: "/api/bot",
         method: "POST",
         data: {
           message: "/cancel",
@@ -207,7 +207,7 @@ describe("routes", () => {
 
     it("should return 'Nothing to cancel' if message starts with '/cancel' and there is no pending message", async () => {
       const res = await api.request({
-        url: "/bot",
+        url: "/api/bot",
         method: "POST",
         data: {
           message: "/cancel",
