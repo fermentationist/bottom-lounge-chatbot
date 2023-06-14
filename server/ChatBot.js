@@ -29,7 +29,7 @@ export class ChatBotRequest {
   constructor({ messages, openai, tokenLimit, model }) {
     this.messages = messages;
     this.openai = openai;
-    this.model = model ?? "gpt-3.5-turbo-0301";
+    this.model = model ?? "gpt-3.5-turbo-0613";
     this.promptLimit = Math.round((tokenLimit ?? TOKEN_LIMIT) * 0.75);
     // trim the messages array to the token limit
     while (ChatBotRequest.tokenEstimate(this.messages) > this.promptLimit
