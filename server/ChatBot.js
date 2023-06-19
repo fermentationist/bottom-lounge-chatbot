@@ -1,25 +1,31 @@
 /* global process */
 import "dotenv/config";
 import { Configuration, OpenAIApi } from "openai";
+import {
+  chatbotFunctions,
+  chatbotFunctionDefinitions,
+} from "./chatbotFunctions.js";
 import opError from "./error.js";
 import getFaq from "./services/getFAQ.js";
 
-const BOT_TEMPERATURE = process.env.BOT_TEMPERATURE && parseFloat(process.env.BOT_TEMPERATURE);
+const BOT_TEMPERATURE =
+  process.env.BOT_TEMPERATURE && parseFloat(process.env.BOT_TEMPERATURE);
 const BOT_INSTRUCTIONS = process.env.BOT_INSTRUCTIONS;
 const BOT_INSTRUCTIONS_EXTRA = process.env.BOT_INSTRUCTIONS_EXTRA ?? "";
 const BOT_NAME = process.env.BOT_NAME;
-// 85% of the max token limit, to leave room for the bot's response
-const MAX_TOKENS = 4096;
-const TOKEN_LIMIT = Math.round(MAX_TOKENS * 0.95);
-// used as key in ChatBot.messages[hostname], to store messages for the public chatbot (the one that responds to everyone in the room)
-
+const TOKEN_LIMIT_4K = 4096;
+const TOKEN_LIMIT_16K = TOKEN_LIMIT_4K * 4;
+const MODEL_4K = "gpt-3.5-turbo-0613";
+const MODEL_16K = "gpt-3.5-turbo-16k";
 
 const getBotInstructions = async (botName) => {
-  const beginningInstructions = `The assistant's name is ${botName}. \n` + BOT_INSTRUCTIONS ?? `The assistant is an AI chatbot. It is helpful, friendly, and informative.`;
+  const beginningInstructions =
+    `The assistant's name is ${botName}. \n` + BOT_INSTRUCTIONS ??
+    `The assistant is an AI chatbot. It is helpful, friendly, and informative.`;
   const faq = await getFaq();
-  const instructions = `${beginningInstructions} \nThe following text is from the FAQ section of the website, which the assistant references to find answers to user questions: \n${faq}`;
+  const instructions = `${beginningInstructions} The assistant always checks the current date and time using the getCurrentDateAndTime function, before answering questions about events relative to time (e.g. "Who is performing tonight?", or "what is the next scheduled event?"). \nThe following text is from the FAQ section of the website, which the assistant references to find answers to user questions: \n${faq}`;
   return instructions + "\n" + BOT_INSTRUCTIONS_EXTRA;
-}
+};
 
 export class ChatBotRequest {
   cancelled = false;
@@ -29,53 +35,135 @@ export class ChatBotRequest {
   constructor({ messages, openai, tokenLimit, model }) {
     this.messages = messages;
     this.openai = openai;
-    this.model = model ?? "gpt-3.5-turbo-0613";
-    this.promptLimit = Math.round((tokenLimit ?? TOKEN_LIMIT) * 0.75);
-    // trim the messages array to the token limit
-    while (ChatBotRequest.tokenEstimate(this.messages) > this.promptLimit
-    ) {
-      // Remove the second and third messages from the array, which are the oldest user message and the oldest bot response
-      if (this.messages.length < 3) {
-        throw opError("invalid_message", "message too long");
-      }
-      console.log("Removing earlier messages to fit token limit...");
-      this.messages.splice(1, 2);
-    }
+    this.model = model ?? MODEL_4K;
+    this.tokenLimit = tokenLimit ?? TOKEN_LIMIT_4K; // Max tokens allowed by the model
+    this.completionLimit = Math.round(this.tokenLimit * 0.25); // Max tokens to allow for completion
+    this.promptLimit = Math.round(this.tokenLimit * 0.75); // Max tokens to allow for prompt
+    this.completionMin = 750; // Min tokens required for completion
   }
+
   static tokenEstimate(messages) {
-    const textContent = messages
-      .map((message) => `${message.role}: ${message.content}`)
-      .join(" ");
-    const wordCount = textContent.split(/[\s,.-]/).length;
-    return Math.ceil(wordCount * 1.5);
+    const textContent = JSON.stringify(messages)
+      .replace(/[\n\r\t]/g, " ")
+      .replace(/[[\]{}"]/g, "");
+    const wordCount = textContent.split(/[\s,.-:]/).length;
+    return Math.ceil(wordCount * 1.25);
   }
+
   cancel() {
     this.cancelled = true;
   }
+
+  useLargerModel() {
+    console.log("Changing to 16k model...");
+    this.model = MODEL_16K;
+    this.tokenLimit = TOKEN_LIMIT_16K;
+    this.promptLimit = Math.round(this.tokenLimit * 0.75);
+    this.completionLimit = Math.round(this.tokenLimit * 0.25);
+  }
+
+  pruneMessages(messages) {
+    // trim the messages array to the token limit
+    const estimatedFunctionTokens = ChatBotRequest.tokenEstimate(
+      chatbotFunctionDefinitions
+    );
+    while (
+      ChatBotRequest.tokenEstimate(messages) + estimatedFunctionTokens >
+      this.promptLimit
+    ) {
+      console.log(
+        "Estimated prompt tokens:",
+        ChatBotRequest.tokenEstimate(messages) + estimatedFunctionTokens
+      );
+      if (messages.length < 3) {
+        throw opError("invalid_message", "message too long");
+      }
+      // Remove the oldest user message and the oldest bot response
+      console.log("Removing earlier messages to fit token limit...");
+      const indexOfOldestUserMessage = messages.findIndex(
+        (message) => message.role === "user"
+      );
+      const indexOfOldestBotMessage = messages.findIndex(
+        (message) => message.role === "assistant"
+      );
+      indexOfOldestUserMessage > -1 &&
+        messages.splice(indexOfOldestUserMessage, 1);
+      indexOfOldestBotMessage > -1 &&
+        messages.splice(indexOfOldestBotMessage, 1);
+    }
+    return messages;
+  }
+
   async getCompletion(messages, temperature) {
     try {
+      messages = messages ?? this.messages;
       console.log("Getting completion from OpenAI API...");
-      const estimatedPromptTokens = ChatBotRequest.tokenEstimate(messages);
+      const estimatedMessageTokens = ChatBotRequest.tokenEstimate(messages);
+      const estimatedFunctionTokens = ChatBotRequest.tokenEstimate(
+        chatbotFunctionDefinitions
+      );
+      console.log("Estimated message tokens:", estimatedMessageTokens);
+      console.log("Estimated function tokens:", estimatedFunctionTokens);
+      const estimatedPromptTokens =
+        estimatedFunctionTokens + estimatedMessageTokens;
       console.log("Estimated prompt tokens:", estimatedPromptTokens);
-      let difference = TOKEN_LIMIT - estimatedPromptTokens;
+      const difference = Math.max(0, this.tokenLimit - estimatedPromptTokens);
+      console.log("estimatedPromptTokens:", estimatedPromptTokens);
+      const tokenMax = Math.min(this.completionLimit, difference);
+      console.log("max completion tokens:", tokenMax);
+      if (tokenMax < this.completionMin) {
+        // switch to 16k model
+        if (this.model === MODEL_16K) {
+          messages = this.pruneMessages(messages);
+        } else {
+          this.useLargerModel();
+        }
+        return this.getCompletion(messages, temperature);
+      }
       performance.mark("start");
       const promise = this.openai.createChatCompletion({
         model: this.model,
         messages,
-        max_tokens: difference,
+        max_tokens: tokenMax,
         temperature,
+        functions: chatbotFunctionDefinitions,
+        function_call: "auto",
       });
       this.promise = promise;
       const response = await promise;
       this.response = response;
       console.log("\nGPT model used:", response?.data?.model);
-      console.log("Total tokens:", response?.data?.usage?.total_tokens);
+      console.log("Prompt tokens used:", response?.data?.usage?.prompt_tokens);
+      console.log(
+        "Completion tokens used:",
+        response?.data?.usage?.completion_tokens
+      );
+      console.log("Total tokens used:", response?.data?.usage?.total_tokens);
+      const result = response?.data?.choices[0];
+      console.log("Finish reason:", result?.finish_reason);
+
+      // if finish_reason is function_call, call the function, add the result to the messages array and call getCompletion again
+      if (result?.finish_reason === "function_call") {
+        const { name, arguments: args } = result.message.function_call;
+        console.log(`Calling function ${name}, with args: ${args}`);
+        const functionResult = await chatbotFunctions[name](args);
+        return this.getCompletion([
+          ...messages,
+          {
+            role: "function",
+            name,
+            content: functionResult,
+          },
+        ]);
+      }
+      // otherwise, return the completion
       return {
         data:
           response?.data?.choices &&
           response.data.choices?.[0]?.message?.content,
         status: "success",
       };
+
     } catch (error) {
       // do not return error to the user
       this.error = error;
@@ -136,7 +224,7 @@ class ChatBot {
     return {
       role: "system",
       content: await this.getBotInstructions(),
-    }
+    };
   }
   // getModeration returns a promise that resolves to the response from the OpenAI API createModeration endpoint
   async getModeration(input) {
@@ -179,18 +267,20 @@ class ChatBot {
       if (contentViolation) {
         return `Sorry, your message was flagged as violating content policies in the category "${contentViolation}". Please reformulate and try again.`;
       }
-      const previousConversation = this.conversations[sessionId] ?? [await this.getSystemPrompt()];
+      const previousConversation = this.conversations[sessionId] ?? [
+        await this.getSystemPrompt(),
+      ];
       const newMessage = {
         role: "user",
         content: userInput,
       };
       const messages = [...previousConversation, newMessage];
-      request = new ChatBotRequest({
-        messages,
-        openai: this.openai,
-      });
+      request = new ChatBotRequest({ openai: this.openai });
       this.addToPendingRequests(sessionId, request);
-      const completion = await request.getCompletion(messages, this.temperature);
+      const completion = await request.getCompletion(
+        messages,
+        this.temperature
+      );
       if (request.cancelled) {
         return null;
       }
@@ -239,7 +329,6 @@ class ChatBot {
     }
     return false;
   }
-
 }
 
 export default ChatBot;

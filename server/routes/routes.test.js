@@ -25,7 +25,6 @@ describe("routes", () => {
 
   describe("POST /api/bot", () => {
     const firstMessage = "hello, this is my first message";
-    const slowQuery = "Please explain all of the rules of Chess.";
     it("should return a 200 response", async () => {
       const res = await api.request({
         url: "/api/bot",
