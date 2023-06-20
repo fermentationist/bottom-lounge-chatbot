@@ -39,16 +39,17 @@ const getUpcomingEvents = async (startDate, endDate, keyword) => {
       time: localTime,
       price,
       status,
+      ageRestrictions: "All ages",
     };
-    if (note) {
-      result.note = note;
-    }
     if (ageRestrictions) {
       const { legalAgeEnforced, age } = ageRestrictions;
-      result.ageRestrictions = legalAgeEnforced ? `Age ${age}+` : `All ages`;
-      if (result.ageRestrictions === "All ages" && (result.note?.includes("17") || result.note?.includes("18") || result.note?.includes("21"))) {
-        // if the note contradicts the age restriction, use the note
-        result.ageRestrictions = result.note;
+      result.ageRestrictions = legalAgeEnforced ? `${age}+` : `All ages`;
+    }
+    if (note) {
+      result.note = note;
+      const ageRestrictionMatch = note.match(/(17|18|21)/);
+      if (ageRestrictionMatch) {
+        result.ageRestrictions = `${ageRestrictionMatch[0]}+`;
       }
     }
     return result;

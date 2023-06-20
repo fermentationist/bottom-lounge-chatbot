@@ -9,7 +9,7 @@ export const chatbotFunctionDefinitions = [
   {
     name: "getUpcomingEvents",
     description:
-      "Get all upcoming events at Bottom Lounge (if called with no arguments), or get upcoming events on a specific date or date range.",
+      "Get all upcoming events at Bottom Lounge (if called with no arguments), or get upcoming events on a specific date or date range. For each event, returns the name, date, time, price, status, ageRestrictions (either the minimum age or \"All ages\"), url and any additional notes.",
     parameters: {
       type: "object",
       properties: {
@@ -41,9 +41,9 @@ async function getUpcomingEvents(args) {
   const events = await getUpcomingBLEvents(startDate || void 0, endDate, keyword);
   const eventList = events.length && events
     .map(
-      ({ name, url, date, time, price, status, note }) =>
-        `${date} at ${time}: ${name} - ${price} - status: ${status} - ${url}${
-          note ? ` - please note: ${note}` : ""
+      ({ name, url, date, time, price, status, notes, ageRestrictions }) =>
+        `${date} at ${time}: ${name} - ${price} - status: ${status} - ${url} - age restrictions: ${ageRestrictions}${
+          notes ? ` - please note: ${notes}` : ""
         }`
     )
     .join("\n");

@@ -23,7 +23,7 @@ const getBotInstructions = async (botName) => {
     `The assistant's name is ${botName}. \n` + BOT_INSTRUCTIONS ??
     `The assistant is an AI chatbot. It is helpful, friendly, and informative.`;
   const faq = await getFaq();
-  const instructions = `${beginningInstructions} If asked about events relative to the current time (e.g. "Who is performing tonight?", or "What is the next scheduled event?"), the assistant always checks the current date and time using the getCurrentDateAndTime function, and uses that information in its call to the getUpcomingEvents function.  \nThe following text is from the FAQ section of the website, which the assistant references to find answers to user questions: \n${faq}`;
+  const instructions = `${beginningInstructions} If asked about events relative to the current time (e.g. "Who is performing tonight?", or "What is the next scheduled event?"), the assistant always checks the current date and time with the getCurrentDateAndTime function, and uses that information in its call to the getUpcomingEvents function. \nThe following text is from the FAQ section of the website, which the assistant references to find answers to user questions: \n${faq}`;
   return instructions + "\n" + BOT_INSTRUCTIONS_EXTRA;
 };
 
