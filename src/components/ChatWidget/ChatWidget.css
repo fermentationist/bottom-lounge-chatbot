@@ -1,3 +1,22 @@
+@keyframes ellipsis {
+  0% {
+    content: "";
+  }
+  33% {
+    content: ".";
+  }
+  66% {
+    content: "..";
+  }
+}
+
+.rcw-loading:after {
+  /* animate ellipsis */
+  content: "..";
+  animation: ellipsis 1s linear infinite;
+  display: inline;
+}
+
 .rcw-input {
   overflow-y: hidden;
   word-wrap: break-word;
@@ -20,8 +39,10 @@
   line-height: 1.85rem;
 }
 
-.rcw-launcher, .rcw-header, .rcw-close-button {
-  background-color: #2AABE2 !important; 
+.rcw-launcher,
+.rcw-header,
+.rcw-close-button {
+  background-color: #2aabe2 !important;
   padding: 0;
 }
 

@@ -22,19 +22,15 @@ const ChatWidget = () => {
       useEffectHasRun = true;
     }
   }, []);
-  const toggleEllipsis = (show) => {
-    const states = ["...", ".", ".."];
-    let i = 0;
-    let index = i % states.length;
+  const toggleEllipsis = async (show) => {
     if (show) {
-      interval = setInterval(() => {
-        i > 0 && deleteMessages(1);
-        addResponseMessage(states[index]);
-        i++;
-        index = i % states.length;
-      }, 500);
+      // await is necessary to wait for the message to be added to the DOM
+      await addResponseMessage(".");
+      const responses = document.querySelectorAll(".rcw-message-text p");
+      const lastMessage = responses[responses.length - 1];
+      // add class with ellipsis animation to last message
+      lastMessage.classList.add("rcw-loading");
     } else {
-      clearInterval(interval);
       deleteMessages(1);
     }
   };
