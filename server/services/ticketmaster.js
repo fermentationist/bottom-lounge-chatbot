@@ -30,8 +30,6 @@ const getUpcomingEvents = async (startDate, endDate, keyword) => {
     const { start } = dates;
     const { localDate, localTime } = start;
     const { min, max } = (priceRanges && priceRanges[0]) ?? {};
-    console.log("min:", min)
-    console.log("max:", max)
     const price = min ? (min === max) || !max ? `$${min}` : `$${min} - $${max}` : `? (see ${url} for details)`;
     const status = dates?.status?.code;
     const result = {

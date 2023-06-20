@@ -16,11 +16,11 @@ export const chatbotFunctionDefinitions = [
         dateTimeOrDateTimeRange: {
           type: "string",
           description:
-            "A start datetime or datetime range, in ISO format, like 2023-09-01T00:00:00Z or 2023-09-01T00:00:00Z..2023-09-02T00:00:00Z. Be sure to adjust for Chicago time by including the current offset from UTC. For example, if you want to see events on September 1, 2023, you would use 2023-09-01T00:00:00-05:00..2023-09-01T23:59:59-05:00",
+            "A start datetime or datetime range in ISO format, like 2023-09-01T00:00:00Z or 2023-09-01T00:00:00Z..2023-09-02T00:00:00Z. Be sure to adjust for Chicago time by including the current offset from UTC. For example, if you want to see events on September 1, 2023, you would use 2023-09-01T00:00:00-05:00..2023-09-01T23:59:59-05:00. If passed only a start datetime, will search for all events from that datetime onward. If passed no arguments, will search for all events from the current datetime onward.",
         },
         keyword: {
           type: "string",
-          description: "A keyword to filter events by.",
+          description: "The name of the artist or event to search for.",
         },
       },
     },
