@@ -1,8 +1,12 @@
 import { useEffect } from "react";
-import { Widget, addResponseMessage, deleteMessages } from "react-chat-widget-react-18";
+import {
+  Widget,
+  addResponseMessage,
+  deleteMessages,
+} from "react-chat-widget-react-18";
 import "react-chat-widget-react-18/lib/styles.css";
 import "./ChatWidget.css";
-import error from "../../../server/error";
+import error from "../../../server/error.js";
 
 const BOT_HOST = import.meta.env.VITE_BOT_HOST_URL;
 const URL = `${BOT_HOST}/api/bot/`;
@@ -22,14 +26,13 @@ const ChatWidget = () => {
     const states = ["...", ".", ".."];
     let i = 0;
     let index = i % states.length;
-    if (show) { 
+    if (show) {
       interval = setInterval(() => {
         i > 0 && deleteMessages(1);
         addResponseMessage(states[index]);
         i++;
         index = i % states.length;
-      }
-      , 500);
+      }, 500);
     } else {
       clearInterval(interval);
       deleteMessages(1);
@@ -48,23 +51,21 @@ const ChatWidget = () => {
       },
       credentials: "include",
       body: JSON.stringify({ message }),
-    }).catch(error => {
-      console.error(error);
-      toggleEllipsis(false);
-      error.message && addResponseMessage(error.message);
-    });
-    const json = response && await response.json();
+    })
+      .then((response) => {
+        toggleEllipsis(false);
+        return response;
+      })
+      .catch((error) => {
+        console.error(error);
+        toggleEllipsis(false);
+        error.message && addResponseMessage(error.message);
+      });
+    const json = response && (await response.json());
     const reply = json?.message ?? json?.error ?? "";
-    // reply && deleteMessages(1);
-    toggleEllipsis(false);
     reply && addResponseMessage(reply);
   };
-  return (
-    <Widget
-      handleNewUserMessage={handleNewUserMessage}
-      title={TITLE}
-    />
-  );
+  return <Widget handleNewUserMessage={handleNewUserMessage} title={TITLE} />;
 };
 
 export default ChatWidget;
