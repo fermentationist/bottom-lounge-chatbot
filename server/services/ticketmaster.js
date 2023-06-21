@@ -15,6 +15,7 @@ const getUpcomingEvents = async (startDate, endDate, keyword) => {
   }${endDate ? `&endDateTime=${endDate}` : ""}${
     keyword ? `&keyword=${encodeURIComponent(keyword)}` : ""
   }&size=200`;
+
   const getPage = async (pageNum) => {
     const url = `${baseURL}&page=${pageNum}`;
     console.log("TM url:", url);
@@ -25,7 +26,7 @@ const getUpcomingEvents = async (startDate, endDate, keyword) => {
         if (res.ok) {
           return res.json();
         }
-        return Promise.reject(res);
+        return Promise.reject(res.statusText);
       })
       .catch((err) => {
         console.error(err);
@@ -68,7 +69,7 @@ const getUpcomingEvents = async (startDate, endDate, keyword) => {
       }
       if (notes) {
         result.notes = notes;
-        const ageRestrictionMatch = notes.match(/(17|18|21)/);
+        const ageRestrictionMatch = notes.match(/(15|16|17|18|21)/);
         if (ageRestrictionMatch) {
           result.ageRestrictions = `${ageRestrictionMatch[0]}+`;
         }
@@ -78,14 +79,13 @@ const getUpcomingEvents = async (startDate, endDate, keyword) => {
     console.log("eventData:", eventData);
     return {
       data: eventData,
-      totalPages
-    }
+      totalPages,
+    };
   };
 
   let pageNum = 0;
-  let totalPages = 1;
+  let totalPages = 0;
   while (pageNum <= totalPages) {
-    console.log("pageNum:", pageNum);
     const page = await getPage(pageNum);
     if (page) {
       if (page.totalPages) {
@@ -95,7 +95,6 @@ const getUpcomingEvents = async (startDate, endDate, keyword) => {
     } else {
       break;
     }
-    console.log("totalPages:", totalPages);
     pageNum++;
   }
   return pages.flat();
