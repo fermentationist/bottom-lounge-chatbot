@@ -43,6 +43,7 @@ const getUpcomingEvents = async (startDate, endDate, keyword) => {
         priceRanges,
         ageRestrictions,
         pleaseNote: notes,
+        classifications
       } = event;
       const { start } = dates;
       const { localDate, localTime } = start;
@@ -53,6 +54,10 @@ const getUpcomingEvents = async (startDate, endDate, keyword) => {
           : `$${min} - $${max}`
         : `? (see ${url} for details)`;
       const status = dates?.status?.code;
+      const segment = classifications?.[0]?.segment?.name;
+      const genre = classifications?.[0]?.genre?.name;
+      const subGenre = classifications?.[0]?.subGenre?.name;
+      const classification = `${segment ?? ""}${segment && genre ? `/${genre}` : genre ? genre : ""}${(segment || genre) && subGenre ? `/${subGenre}` : subGenre ? subGenre : ""}`;
       const result = {
         name,
         url,
@@ -61,6 +66,7 @@ const getUpcomingEvents = async (startDate, endDate, keyword) => {
         price,
         status,
         ageRestrictions: "All ages",
+        classification
       };
       if (ageRestrictions) {
         const { legalAgeEnforced, age } = ageRestrictions;
