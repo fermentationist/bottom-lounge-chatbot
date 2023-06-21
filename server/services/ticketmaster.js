@@ -9,7 +9,6 @@ const BOTTOM_LOUNGE_VENUE_ID = "KovZpaoyCe";
 
 const getUpcomingEvents = async (startDate, endDate, keyword) => {
   startDate = startDate === "now" ? new Date().toISOString() : startDate;
-  const pages = [];
   const baseURL = `${TICKETMASTER_DISCOVERY_API_EVENTS_URL}?apikey=${TICKETMASTER_API_KEY}&venueId=${BOTTOM_LOUNGE_VENUE_ID}&sort=date,asc${
     startDate ? `&startDateTime=${startDate}` : ""
   }${endDate ? `&endDateTime=${endDate}` : ""}${
@@ -83,13 +82,16 @@ const getUpcomingEvents = async (startDate, endDate, keyword) => {
     };
   };
 
+  const pages = [];
   let pageNum = 0;
   let totalPages = 0;
+  // get all pages of results
   while (pageNum <= totalPages) {
     const page = await getPage(pageNum);
     if (page) {
       if (page.totalPages) {
-        totalPages = page.totalPages;
+        // last page is always empty
+        totalPages = page.totalPages - 1;
       }
       pages.push(page.data);
     } else {

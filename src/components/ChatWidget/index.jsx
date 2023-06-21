@@ -15,23 +15,25 @@ const TITLE = import.meta.env.VITE_CHAT_WIDGET_TITLE ?? "Welcome!";
 
 const ChatWidget = () => {
   let useEffectHasRun = false;
-  let interval;
+  let ellipsis = false;
   useEffect(() => {
     if (!useEffectHasRun) {
       addResponseMessage(GREETING);
       useEffectHasRun = true;
     }
   }, []);
-  const toggleEllipsis = async (show) => {
+  const showEllipsis = async (show) => {
     if (show) {
-      // await is necessary to wait for the message to be added to the DOM
-      await addResponseMessage(".");
+      ellipsis = true;
+      // it is necessary to wait for the message to be added to the DOM
+      await addResponseMessage(".", "ellipsis");
       const responses = document.querySelectorAll(".rcw-message-text p");
       const lastMessage = responses[responses.length - 1];
       // add class with ellipsis animation to last message
       lastMessage.classList.add("rcw-loading");
     } else {
-      deleteMessages(1);
+      ellipsis = false;
+      deleteMessages(1, "ellipsis");
     }
   };
 
@@ -39,22 +41,30 @@ const ChatWidget = () => {
     if (!message) {
       return;
     }
-    toggleEllipsis(true);
+    if (ellipsis) {
+      // if the user sends a message while the ellipsis animation is running, remove the ellipsis
+      showEllipsis(false);
+    }
+    // show ellipsis animation while waiting for response
+    showEllipsis(true);
     const response = await fetch(URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
+      // must include credentials to send cookies. Won't be automatically sent otherwise because of CORS
       credentials: "include",
       body: JSON.stringify({ message }),
     })
       .then((response) => {
-        toggleEllipsis(false);
+        // remove ellipsis animation
+        showEllipsis(false);
         return response;
       })
       .catch((error) => {
         console.error(error);
-        toggleEllipsis(false);
+        // remove ellipsis animation
+        showEllipsis(false);
         error.message && addResponseMessage(error.message);
       });
     const json = response && (await response.json());
