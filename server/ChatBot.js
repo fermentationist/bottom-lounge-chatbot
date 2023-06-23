@@ -23,7 +23,18 @@ const getBotInstructions = async (botName) => {
     `The assistant's name is ${botName}. \n` + BOT_INSTRUCTIONS ??
     `The assistant is an AI chatbot. It is helpful, friendly, and informative.`;
   const faq = await getFaq();
-  const instructions = `${beginningInstructions} The assistant can get real-time information about upcoming events using the getUpcomingEvents function, which queries the Ticketmaster API. If asked about events relative to the current time (e.g. "Who is performing tonight?", or "What is the next scheduled event?"), the assistant ALWAYS checks the current date and time with the getCurrentDateAndTime function, and uses that information in its call to the getUpcomingEvents function. \nThe following text is from the FAQ section of the website, which the assistant references to find answers to user questions: \n"""\n${faq}\n${BOT_INSTRUCTIONS_EXTRA ?? ""}\n"""`;
+  // const instructions = `${beginningInstructions} The assistant can get real-time information about upcoming events using the getUpcomingEvents function, which queries the Ticketmaster API. If asked about events relative to the current time (e.g. "Who is performing tonight?", or "What is the next scheduled event?"), the assistant ALWAYS checks the current date and time with the getCurrentDateAndTime function, and uses that information in its call to the getUpcomingEvents function. \nThe following text is from the FAQ section of the website, which the assistant references to find answers to user questions: \n"""\n${faq}\n${
+  //   BOT_INSTRUCTIONS_EXTRA ?? ""
+  // }\n"""`;
+  const instructions = `${beginningInstructions} The assistant can get real-time information about upcoming events using the getUpcomingEvents function, which queries the Ticketmaster API. If asked about events relative to the current time (e.g. "Who is performing tonight?", or "What is the next scheduled event?"), the assistant performs the following actions, in order: 
+  1. Get the current date and time using the getCurrentDateAndTime function.
+  2. Determine the appropriate date or date range to search for events.
+  3. Call the getUpcomingEvents function, passing the date or date range, if appropriate.
+  The following text is from the FAQ section of the website, which the assistant references to find answers to user questions: 
+  """
+  ${faq}
+  ${BOT_INSTRUCTIONS_EXTRA ?? ""}
+  """`;
   return instructions;
 };
 
@@ -75,20 +86,23 @@ export class ChatBotRequest {
     const messagesToSummarize = messages.slice(1, -1);
     const systemMessage = `The following is a conversation between a user and an AI chatbot. Using the labels "user" and "assistant" for the two speakers, summarize the conversation: \n"""\n${JSON.stringify(
       messagesToSummarize
-      )}\n"""`;
+    )}\n"""`;
     const [summary] = await this.getCompletion({
       messages: [
         {
           role: "system",
           content: systemMessage,
-        }
+        },
       ],
       temperature: 0.5,
       // make sure functions cannot be called during summary
       functions: null,
     });
     if (summary?.status === "error") {
-      throw opError("api_error", "could not summarize messages");
+      console.log("Error summarizing messages:");
+      console.error(summary?.data);
+      console.log("Returning original messages...");
+      return messages;
     }
     const newMessages = [
       {
@@ -227,29 +241,33 @@ export class ChatBotRequest {
       }
       // otherwise, return an array containing the completion and the updated messages array with the new completion (in case it was summarized or pruned)
       const content = response?.data?.choices?.[0]?.message?.content;
-      return [{
-        data: content,
-        status: "success",
-      }, [
-        ...messages,
+      return [
         {
-          role: "assistant",
-          content
-        }
-      ]];
-
+          data: content,
+          status: "success",
+        },
+        [
+          ...messages,
+          {
+            role: "assistant",
+            content,
+          },
+        ],
+      ];
     } catch (error) {
       // do not return error to the user
       this.error = error;
       console.log("Error getting completion from OpenAI API:");
       console.error(error.response?.data?.error ?? error);
       if (error.response?.data?.error?.type === "server_error") {
-        return [{
-          data: `My apologies, but I can't talk right now. Please come back later.`,
-          status: "error",
-        }, messages];
+        return [
+          {
+            data: `My apologies, but I can't talk right now. Please come back later.`,
+            status: "error",
+          },
+          messages,
+        ];
       }
-
     } finally {
       performance.mark("end");
       const measurement = performance.measure(
@@ -303,6 +321,7 @@ class ChatBot {
       content: await this.getBotInstructions(),
     };
   }
+
   // getModeration returns a promise that resolves to the response from the OpenAI API createModeration endpoint
   async getModeration(input) {
     const response = await this.openai.createModeration({ input });
