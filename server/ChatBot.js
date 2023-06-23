@@ -23,8 +23,8 @@ const getBotInstructions = async (botName) => {
     `The assistant's name is ${botName}. \n` + BOT_INSTRUCTIONS ??
     `The assistant is an AI chatbot. It is helpful, friendly, and informative.`;
   const faq = await getFaq();
-  const instructions = `${beginningInstructions} The assistant can get real-time information about upcoming events using the getUpcomingEvents function, which queries the Ticketmaster API. If asked about events relative to the current time (e.g. "Who is performing tonight?", or "What is the next scheduled event?"), the assistant ALWAYS checks the current date and time with the getCurrentDateAndTime function, and uses that information in its call to the getUpcomingEvents function. \nThe following text is from the FAQ section of the website, which the assistant references to find answers to user questions: \n${faq}`;
-  return instructions + "\n" + BOT_INSTRUCTIONS_EXTRA;
+  const instructions = `${beginningInstructions} The assistant can get real-time information about upcoming events using the getUpcomingEvents function, which queries the Ticketmaster API. If asked about events relative to the current time (e.g. "Who is performing tonight?", or "What is the next scheduled event?"), the assistant ALWAYS checks the current date and time with the getCurrentDateAndTime function, and uses that information in its call to the getUpcomingEvents function. \nThe following text is from the FAQ section of the website, which the assistant references to find answers to user questions: \n"""\n${faq}\n${BOT_INSTRUCTIONS_EXTRA ?? ""}\n"""`;
+  return instructions;
 };
 
 export class ChatBotRequest {
@@ -62,6 +62,46 @@ export class ChatBotRequest {
     this.completionLimit = Math.round(this.tokenLimit * 0.25);
   }
 
+  resetModel() {
+    console.log("Resetting to 4K model...");
+    this.model = MODEL_4K;
+    this.tokenLimit = TOKEN_LIMIT_4K;
+    this.promptLimit = Math.round(this.tokenLimit * 0.75);
+    this.completionLimit = Math.round(this.tokenLimit * 0.25);
+  }
+
+  async summarizeMessages(messages) {
+    console.log("Summarizing messages...");
+    const messagesToSummarize = messages.slice(1, -1);
+    const systemMessage = `The following is a conversation between a user and an AI chatbot. Using the labels "user" and "assistant" for the two speakers, summarize the conversation: \n"""\n${JSON.stringify(
+      messagesToSummarize
+      )}\n"""`;
+    const [summary] = await this.getCompletion({
+      messages: [
+        {
+          role: "system",
+          content: systemMessage,
+        }
+      ],
+      temperature: 0.5,
+      // make sure functions cannot be called during summary
+      functions: null,
+    });
+    if (summary?.status === "error") {
+      throw opError("api_error", "could not summarize messages");
+    }
+    const newMessages = [
+      {
+        // new system message with summary
+        role: "system",
+        content: `${messages[0].content} \nThe following is a summary of part of the prior conversation between the user and the assistant (summarized to reduce the number tokens needed): \n"""\n${summary?.data}\n"""`,
+      },
+      // the last user message
+      messages.slice(-1)[0],
+    ];
+    return newMessages;
+  }
+
   pruneMessages(messages) {
     // trim the messages array to the token limit
     const estimatedFunctionTokens = ChatBotRequest.tokenEstimate(
@@ -94,7 +134,11 @@ export class ChatBotRequest {
     return messages;
   }
 
-  async getCompletion(messages, temperature) {
+  async getCompletion({
+    messages,
+    temperature,
+    functions = chatbotFunctionDefinitions,
+  }) {
     try {
       messages = messages ?? this.messages;
       console.log("Getting completion from OpenAI API...");
@@ -108,30 +152,51 @@ export class ChatBotRequest {
         estimatedFunctionTokens + estimatedMessageTokens;
       console.log("Estimated prompt tokens:", estimatedPromptTokens);
       const difference = Math.max(0, this.tokenLimit - estimatedPromptTokens);
-      console.log("estimatedPromptTokens:", estimatedPromptTokens);
-      const tokenMax = Math.min(this.completionLimit, difference);
-      console.log("max completion tokens:", tokenMax);
+      let tokenMax = Math.min(this.completionLimit, difference);
+      console.log("Max completion tokens:", tokenMax);
+
       if (tokenMax < this.completionMin) {
-        // switch to 16k model
-        if (this.model === MODEL_16K) {
-          messages = this.pruneMessages(messages);
-        } else {
-          this.useLargerModel();
+        // if number of tokens remaining for completion is less than the minimum, try summarizing the messages
+        const summarizedMessages = await this.summarizeMessages(messages);
+        const estimatedSummarizedTokens =
+          ChatBotRequest.tokenEstimate(summarizedMessages);
+        const estimatedPromptTokensWithSummary =
+          estimatedSummarizedTokens + estimatedFunctionTokens;
+        const differenceWithSummary = Math.max(
+          0,
+          this.tokenLimit - estimatedPromptTokensWithSummary
+        );
+        if (differenceWithSummary < this.completionMin) {
+          // if number of tokens remaining for completion is still less than the minimum, use the larger model
+          if (this.model === MODEL_4K) {
+            this.useLargerModel();
+          } else {
+            // if already using the larger model, prune the messages array
+            messages = this.pruneMessages(messages);
+          }
+          return this.getCompletion({ messages, temperature, functions });
         }
-        return this.getCompletion(messages, temperature);
+        // otherwise, use the summarized messages
+        messages = summarizedMessages;
+        console.log(
+          "Estimated prompt tokens with summary:",
+          estimatedPromptTokensWithSummary
+        );
+        tokenMax = Math.min(this.completionLimit, differenceWithSummary);
+        console.log("Max completion tokens with summary:", tokenMax);
       }
+
       performance.mark("start");
-      const promise = this.openai.createChatCompletion({
+      // get completion from OpenAI API
+      const response = await this.openai.createChatCompletion({
         model: this.model,
         messages,
         max_tokens: tokenMax,
-        temperature,
-        functions: chatbotFunctionDefinitions,
-        function_call: "auto",
+        temperature: temperature ?? BOT_TEMPERATURE,
+        functions: functions || void 0,
+        function_call: (functions && "auto") || void 0,
       });
-      this.promise = promise;
-      const response = await promise;
-      this.response = response;
+
       console.log("\nGPT model used:", response?.data?.model);
       console.log("Prompt tokens used:", response?.data?.usage?.prompt_tokens);
       console.log(
@@ -147,22 +212,31 @@ export class ChatBotRequest {
         const { name, arguments: args } = result.message.function_call;
         console.log(`Calling function ${name}, with args: ${args}`);
         const functionResult = await chatbotFunctions[name](args);
-        return this.getCompletion([
-          ...messages,
-          {
-            role: "function",
-            name,
-            content: functionResult,
-          },
-        ]);
+        return this.getCompletion({
+          messages: [
+            ...messages,
+            {
+              role: "function",
+              name,
+              content: functionResult,
+            },
+          ],
+          temperature,
+          functions,
+        });
       }
-      // otherwise, return the completion
-      return {
-        data:
-          response?.data?.choices &&
-          response.data.choices?.[0]?.message?.content,
+      // otherwise, return an array containing the completion and the updated messages array with the new completion (in case it was summarized or pruned)
+      const content = response?.data?.choices?.[0]?.message?.content;
+      return [{
+        data: content,
         status: "success",
-      };
+      }, [
+        ...messages,
+        {
+          role: "assistant",
+          content
+        }
+      ]];
 
     } catch (error) {
       // do not return error to the user
@@ -170,11 +244,12 @@ export class ChatBotRequest {
       console.log("Error getting completion from OpenAI API:");
       console.error(error.response?.data?.error ?? error);
       if (error.response?.data?.error?.type === "server_error") {
-        return {
+        return [{
           data: `My apologies, but I can't talk right now. Please come back later.`,
           status: "error",
-        };
+        }, messages];
       }
+
     } finally {
       performance.mark("end");
       const measurement = performance.measure(
@@ -187,6 +262,8 @@ export class ChatBotRequest {
         parseFloat((measurement.duration / 1000).toFixed(2)),
         "s"
       );
+      // reset to 4k model if using 16k model
+      this.model === MODEL_16K && this.resetModel();
       this.pending = false;
     }
   }
@@ -277,10 +354,10 @@ class ChatBot {
       const messages = [...previousConversation, newMessage];
       request = new ChatBotRequest({ openai: this.openai });
       this.addToPendingRequests(sessionId, request);
-      const completion = await request.getCompletion(
+      const [completion, updatedMessages] = await request.getCompletion({
         messages,
-        this.temperature
-      );
+        temperature: this.temperature,
+      });
       if (request.cancelled) {
         return null;
       }
@@ -289,7 +366,7 @@ class ChatBot {
           role: "assistant",
           content: completion.data,
         });
-        this.conversations[sessionId] = messages;
+        this.conversations[sessionId] = updatedMessages;
       }
       return completion.data;
     } catch (error) {
