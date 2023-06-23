@@ -23,9 +23,6 @@ const getBotInstructions = async (botName) => {
     `The assistant's name is ${botName}. \n` + BOT_INSTRUCTIONS ??
     `The assistant is an AI chatbot. It is helpful, friendly, and informative.`;
   const faq = await getFaq();
-  // const instructions = `${beginningInstructions} The assistant can get real-time information about upcoming events using the getUpcomingEvents function, which queries the Ticketmaster API. If asked about events relative to the current time (e.g. "Who is performing tonight?", or "What is the next scheduled event?"), the assistant ALWAYS checks the current date and time with the getCurrentDateAndTime function, and uses that information in its call to the getUpcomingEvents function. \nThe following text is from the FAQ section of the website, which the assistant references to find answers to user questions: \n"""\n${faq}\n${
-  //   BOT_INSTRUCTIONS_EXTRA ?? ""
-  // }\n"""`;
   const instructions = `${beginningInstructions} The assistant can get real-time information about upcoming events using the getUpcomingEvents function, which queries the Ticketmaster API. If asked about events relative to the current time (e.g. "Who is performing tonight?", or "What is the next scheduled event?"), the assistant performs the following actions, in order: 
   1. Use the getCurrentDateAndTime function to get the current date and time.
   2. Determine the appropriate date or date range to search for events.
