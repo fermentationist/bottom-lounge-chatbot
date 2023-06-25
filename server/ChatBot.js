@@ -23,7 +23,7 @@ const getBotInstructions = async (botName) => {
     `The assistant's name is ${botName}. \n` + BOT_INSTRUCTIONS ??
     `The assistant is an AI chatbot. It is helpful, friendly, and informative.`;
   const faq = await getFaq();
-  const instructions = `${beginningInstructions} The assistant can get real-time information about upcoming events using the getUpcomingEvents function, which queries the Ticketmaster API. If asked about events relative to the current time (e.g. "Who is performing tonight?", or "What is the next scheduled event?"), the assistant performs the following actions, in order: 
+  const instructions = `${beginningInstructions} The assistant can get real-time information (name, url, date, time, price, ageRestrictions, genre etc.) about upcoming events using the getUpcomingEvents function, which queries the Ticketmaster API. If asked about events relative to the current time (e.g. "Who is performing tonight?", or "What is the next scheduled event?"), the assistant performs the following actions, in order: 
   1. Use the getCurrentDateAndTime function to get the current date and time.
   2. Determine the appropriate date or date range to search for events.
   3. Call the getUpcomingEvents function, passing the date or date range, if appropriate.
@@ -40,10 +40,11 @@ export class ChatBotRequest {
   pending = true;
   response = null;
   error = null;
-  constructor({ messages, openai, tokenLimit, model }) {
+  constructor({ messages, openai, tokenLimit, model, temperature }) {
     this.messages = messages;
     this.openai = openai;
     this.model = model ?? MODEL_4K;
+    this.temperature = temperature ?? BOT_TEMPERATURE;
     this.tokenLimit = tokenLimit ?? TOKEN_LIMIT_4K; // Max tokens allowed by the model
     this.completionLimit = Math.round(this.tokenLimit * 0.25); // Max tokens to allow for completion
     this.promptLimit = Math.round(this.tokenLimit * 0.75); // Max tokens to allow for prompt
@@ -232,7 +233,7 @@ export class ChatBotRequest {
               content: functionResult,
             },
           ],
-          temperature,
+          temperature: temperature ?? BOT_TEMPERATURE,
           functions,
         });
       }
@@ -295,8 +296,6 @@ class ChatBot {
     "violence/graphic",
   ];
   name = BOT_NAME ?? "Marvin";
-  temperature = BOT_TEMPERATURE ?? 0.95;
-  model = "gpt-3.5-turbo-0301";
   cancelled = false;
   pendingRequestMessage = `Please wait while I finish responding to your previous message. If you don't want to wait, type "/cancel" to cancel your previous message.`;
   constructor() {
@@ -371,8 +370,7 @@ class ChatBot {
       request = new ChatBotRequest({ openai: this.openai });
       this.addToPendingRequests(sessionId, request);
       const [completion, updatedMessages] = await request.getCompletion({
-        messages,
-        temperature: this.temperature,
+        messages
       });
       if (request.cancelled) {
         return null;
