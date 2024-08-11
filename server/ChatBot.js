@@ -13,10 +13,8 @@ const BOT_TEMPERATURE =
 const BOT_INSTRUCTIONS = process.env.BOT_INSTRUCTIONS;
 const BOT_INSTRUCTIONS_EXTRA = process.env.BOT_INSTRUCTIONS_EXTRA ?? "";
 const BOT_NAME = process.env.BOT_NAME;
-const TOKEN_LIMIT_4K = 4096;
-const TOKEN_LIMIT_16K = TOKEN_LIMIT_4K * 4;
-const MODEL_4K = "gpt-3.5-turbo-0613";
-const MODEL_16K = "gpt-3.5-turbo-16k";
+const TOKEN_LIMIT = 131_072;
+const MODEL = "gpt-4o-mini";
 
 const getBotInstructions = async (botName) => {
   const beginningInstructions =
@@ -43,9 +41,9 @@ export class ChatBotRequest {
   constructor({ messages, openai, tokenLimit, model, temperature }) {
     this.messages = messages;
     this.openai = openai;
-    this.model = model ?? MODEL_4K;
+    this.model = model ?? MODEL;
     this.temperature = temperature ?? BOT_TEMPERATURE;
-    this.tokenLimit = tokenLimit ?? TOKEN_LIMIT_4K; // Max tokens allowed by the model
+    this.tokenLimit = tokenLimit ?? TOKEN_LIMIT; // Max tokens allowed by the model
     this.completionLimit = Math.round(this.tokenLimit * 0.25); // Max tokens to allow for completion
     this.promptLimit = Math.round(this.tokenLimit * 0.75); // Max tokens to allow for prompt
     this.completionMin = 750; // Min tokens required for completion
@@ -62,23 +60,7 @@ export class ChatBotRequest {
   cancel() {
     this.cancelled = true;
   }
-
-  useLargerModel() {
-    console.log("Changing to 16k model...");
-    this.model = MODEL_16K;
-    this.tokenLimit = TOKEN_LIMIT_16K;
-    this.promptLimit = Math.round(this.tokenLimit * 0.75);
-    this.completionLimit = Math.round(this.tokenLimit * 0.25);
-  }
-
-  resetModel() {
-    console.log("Resetting to 4K model...");
-    this.model = MODEL_4K;
-    this.tokenLimit = TOKEN_LIMIT_4K;
-    this.promptLimit = Math.round(this.tokenLimit * 0.75);
-    this.completionLimit = Math.round(this.tokenLimit * 0.25);
-  }
-
+  
   async summarizeMessages(messages) {
     console.log("Summarizing messages...");
     const messagesToSummarize = messages.slice(1, -1);
@@ -180,7 +162,7 @@ export class ChatBotRequest {
         );
         if (differenceWithSummary < this.completionMin) {
           // if number of tokens remaining for completion is still less than the minimum, use the larger model
-          if (this.model === MODEL_4K) {
+          if (this.model === MODEL) {
             this.useLargerModel();
           } else {
             // if already using the larger model, prune the messages array
@@ -279,7 +261,7 @@ export class ChatBotRequest {
         "s"
       );
       // reset to 4k model if using 16k model
-      this.model === MODEL_16K && this.resetModel();
+      this.model === SECONDARY_MODEL && this.resetModel();
       this.pending = false;
     }
   }
