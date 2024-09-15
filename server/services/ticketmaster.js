@@ -11,7 +11,7 @@ const getUpcomingEvents = async (startDate, endDate, keyword) => {
   startDate = startDate === "now" ? new Date().toISOString() : startDate;
   const baseURL = `${TICKETMASTER_DISCOVERY_API_EVENTS_URL}?apikey=${TICKETMASTER_API_KEY}&venueId=${BOTTOM_LOUNGE_VENUE_ID}&sort=date,asc${
     startDate ? `&startDateTime=${startDate}` : ""
-  }${endDate ? `&endDateTime=${endDate}` : ""}${
+  }${startDate && endDate ? `&endDateTime=${endDate}` : ""}${
     keyword ? `&keyword=${encodeURIComponent(keyword)}` : ""
   }&size=200`;
 

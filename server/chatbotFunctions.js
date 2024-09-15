@@ -13,15 +13,17 @@ export const chatbotFunctionDefinitions = [
     parameters: {
       type: "object",
       properties: {
-        dateTimeOrDateTimeRange: {
+        endDate: {
           type: "string",
           description:
-            "A start datetime or datetime range in ISO format, like 2023-09-01T00:00:00Z or 2023-09-01T00:00:00Z..2023-09-02T00:00:00Z. Be sure to adjust for Chicago time by including the current offset from UTC. For example, if you want to see events on September 1, 2023, you would use 2023-09-01T00:00:00-05:00..2023-09-01T23:59:59-05:00. If passed only a start datetime, will search for all events from that datetime onward. If undefined, will search for all events from the current datetime onward.",
+            "An ending datetime in ISO format, like 2023-09-01T00:00:00Z. Be sure to adjust for Chicago time by including the current offset from UTC. For example, if you want to see events for a range ending on September 1, 2023, you would use 2023-09-01T00:00:00-05:00. If endDate is undefined and a startDate was passed, it will search for all events from startDate onward. If startDate is also undefined, it will search for all events from the current datetime onward.",
         },
         keyword: {
           type: "string",
           description: "The name of the artist or event to search for.",
         },
+        //   },
+        // },
       },
     },
   },
@@ -37,11 +39,10 @@ export const chatbotFunctionDefinitions = [
 
 async function getUpcomingEvents(args) {
   try {
-    const { dateTimeOrDateTimeRange, keyword, ageRestrictions } =
+    const { startDate, endDate, keyword, ageRestrictions } =
       (args && JSON.parse(args)) ?? {};
-    const [startDate, endDate] = (dateTimeOrDateTimeRange ?? "").split("..");
     const events = await getUpcomingBLEvents(
-      startDate || void 0,
+      startDate,
       endDate,
       keyword
     );
@@ -52,7 +53,17 @@ async function getUpcomingEvents(args) {
       filteredEvents.length &&
       filteredEvents
         .map(
-          ({ name, url, date, time, price, status, notes, ageRestrictions, classification }) =>
+          ({
+            name,
+            url,
+            date,
+            time,
+            price,
+            status,
+            notes,
+            ageRestrictions,
+            classification,
+          }) =>
             `${date} at ${time}: ${name} - ${price} - status: ${status} - ${url} - age restrictions: ${ageRestrictions} - genre: ${classification}${
               notes ? ` - please note: ${notes}` : ""
             }`
