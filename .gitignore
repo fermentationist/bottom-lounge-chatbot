@@ -4,3 +4,5 @@ coverage
 test/responses.txt
 .DS_Store
 dist
+*.env*
+*.log
