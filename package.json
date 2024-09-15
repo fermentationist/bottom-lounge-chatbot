@@ -31,7 +31,7 @@
     "express": "^4.18.2",
     "express-rate-limit": "^6.7.0",
     "openai": "^3.2.1",
-    "puppeteer": "^20.5.0",
+    "puppeteer": "^23.3.0",
     "react": "^18.2.0",
     "react-chat-widget-react-18": "^1.0.0",
     "react-dom": "^18.2.0",

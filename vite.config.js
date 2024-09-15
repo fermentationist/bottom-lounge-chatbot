@@ -9,6 +9,7 @@ export default defineConfig(({ command, mode }) => {
   return {
     plugins: [react()],
     server: {
+      open: true,
       cors: true,
       port: DEV_SERVER_PORT ?? 3000,
       proxy: {
