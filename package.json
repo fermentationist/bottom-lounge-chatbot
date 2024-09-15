@@ -19,7 +19,8 @@
     "test-chatbot": "NODE_OPTIONS=--experimental-vm-modules && export NODE_OPTIONS && jest \"ChatBot.test.js\" --runInBand --detectOpenHandles --forceExit --coverage",
     "test-all": "npm run test-faq && npm run test-chatbot && npm run test-scraper && npm run test-routes && npm run test-responses",
     "server": "node server/index.js",
-    "start": "NODE_ENV=production && export NODE_ENV && npm run build && npm run server"
+    "start": "NODE_ENV=production && export NODE_ENV && npm run build && npm run server",
+    "render_start": "NODE_ENV=production && export NODE_ENV && npm run server"
   },
   "author": "",
   "license": "ISC",
