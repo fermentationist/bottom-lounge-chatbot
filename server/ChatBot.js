@@ -13,7 +13,7 @@ const BOT_TEMPERATURE =
 const BOT_INSTRUCTIONS = process.env.BOT_INSTRUCTIONS;
 const BOT_INSTRUCTIONS_EXTRA = process.env.BOT_INSTRUCTIONS_EXTRA ?? "";
 const BOT_NAME = process.env.BOT_NAME;
-const TOKEN_LIMIT = 131_072;
+const TOKEN_LIMIT = 16384;
 const MODEL = "gpt-4o-mini";
 
 const getBotInstructions = async (botName) => {
@@ -259,9 +259,7 @@ export class ChatBotRequest {
         "Time to run: ",
         parseFloat((measurement.duration / 1000).toFixed(2)),
         "s"
-      );
-      // reset to 4k model if using 16k model
-      this.model === SECONDARY_MODEL && this.resetModel();
+      ); 
       this.pending = false;
     }
   }
